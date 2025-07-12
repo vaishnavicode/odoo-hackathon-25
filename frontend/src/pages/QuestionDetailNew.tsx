@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { RichEditor } from "@/components/ui/RichEditor";
 import { Label } from "@/components/ui/label";
 import {
     AlertDialog,
@@ -385,17 +386,17 @@ const QuestionDetailNew = () => {
                                             {editingAnswer ===
                                             answer.id.toString() ? (
                                                 <div className="space-y-4">
-                                                    <Textarea
+                                                    <RichEditor
                                                         value={
                                                             editingAnswerText
                                                         }
-                                                        onChange={(e) =>
+                                                        onChange={(value) =>
                                                             setEditingAnswerText(
-                                                                e.target.value
+                                                                value
                                                             )
                                                         }
-                                                        rows={6}
                                                         placeholder="Edit your answer..."
+                                                        className="min-h-[200px]"
                                                     />
                                                     <div className="flex space-x-2">
                                                         <Button
@@ -647,15 +648,13 @@ const QuestionDetailNew = () => {
                             <div className="space-y-4">
                                 <div>
                                     <Label htmlFor="answer">Answer</Label>
-                                    <Textarea
-                                        id="answer"
-                                        placeholder="Share your knowledge and help others..."
+                                    <RichEditor
                                         value={newAnswer}
-                                        onChange={(e) =>
-                                            setNewAnswer(e.target.value)
+                                        onChange={(value) =>
+                                            setNewAnswer(value)
                                         }
-                                        rows={8}
-                                        className="mt-1"
+                                        placeholder="Share your knowledge and help others..."
+                                        className="min-h-[250px] mt-1"
                                     />
                                 </div>
                                 <div className="flex justify-end">

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichEditor } from "@/components/ui/RichEditor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell, User, Plus, X, Loader2 } from "lucide-react";
@@ -140,19 +140,16 @@ const AskQuestion = () => {
                                                 on what you put in the title.
                                                 Minimum 20 characters.
                                             </p>
-                                            <Textarea
-                                                id="description"
+                                            <RichEditor
                                                 value={formData.description}
-                                                onChange={(e) =>
+                                                onChange={(value) =>
                                                     setFormData((prev) => ({
                                                         ...prev,
-                                                        description:
-                                                            e.target.value,
+                                                        description: value,
                                                     }))
                                                 }
                                                 placeholder="Describe your problem in detail..."
                                                 className="w-full min-h-[200px]"
-                                                required
                                             />
                                         </div>
 
