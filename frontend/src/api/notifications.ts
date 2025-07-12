@@ -59,6 +59,10 @@ function getAuthHeaders(): HeadersInit {
     };
 }
 
+// NOTE: Notification endpoints are not yet implemented in the backend
+// This API is commented out until backend endpoints are added
+
+/*
 // API functions for notifications
 export const notificationsApi = {
     // Get all notifications with pagination
@@ -119,5 +123,26 @@ export const notificationsApi = {
             }
         );
         await handleResponse<void>(response);
+    },
+};
+*/
+
+// Placeholder export for when notifications are implemented
+export const notificationsApi = {
+    // Placeholder - not implemented in backend yet
+    getNotifications: async (): Promise<NotificationsResponse> => {
+        throw new Error("Notifications API not yet implemented in backend");
+    },
+    getUnreadCount: async (): Promise<UnreadCountResponse> => {
+        throw new Error("Notifications API not yet implemented in backend");
+    },
+    markAsRead: async (): Promise<void> => {
+        throw new Error("Notifications API not yet implemented in backend");
+    },
+    markAllAsRead: async (): Promise<void> => {
+        throw new Error("Notifications API not yet implemented in backend");
+    },
+    deleteNotification: async (): Promise<void> => {
+        throw new Error("Notifications API not yet implemented in backend");
     },
 };

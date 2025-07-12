@@ -6,6 +6,7 @@ import {
     BackendAdminLoginResponse,
     BackendAdminRegisterResponse,
     BackendAdminProfile,
+    BackendUserProfile,
 } from "@/models/auth";
 
 const API_BASE_URL =
@@ -157,19 +158,46 @@ export const adminApi = {
 
         return handleResponse<{ message: string }>(response);
     },
-};
 
-// Test API connectivity
-export const testApi = {
-    // Test backend connection
-    testConnection: async (): Promise<{ message: string }> => {
-        const response = await fetch(`${API_BASE_URL}/test/`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
+    // View user profile by admin
+    viewUserProfile: async (userId: number): Promise<User> => {
+        const response = await fetch(
+            `${API_BASE_URL}/auth/admin/user/${userId}/`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+            }
+        );
 
-        return handleResponse<{ message: string }>(response);
+        const data = await handleResponse<BackendUserProfile>(response);
+
+        return {
+            id: data.id.toString(),
+            username: data.username,
+            email: data.user_email,
+            reputation: 0,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+    },
+
+    // Update user profile by admin
+    updateUserProfile: async (
+        userId: number,
+        profileData: {
+            username?: string;
+            user_email?: string;
+        }
+    ): Promise<{ message: string; user: User }> => {
+        const response = await fetch(
+            `${API_BASE_URL}/auth/admin/user/${userId}/update/`,
+            {
+                method: "PUT",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(profileData),
+            }
+        );
+
+        return handleResponse<{ message: string; user: User }>(response);
     },
 };

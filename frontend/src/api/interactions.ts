@@ -29,6 +29,18 @@ function getAuthHeaders(): HeadersInit {
 
 // Answer-related API calls
 export const answersApi = {
+    // Get answer detail by ID
+    getAnswerDetail: async (answerId: string): Promise<Answer> => {
+        const response = await fetch(`${API_BASE_URL}/answers/${answerId}/`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        return handleResponse<Answer>(response);
+    },
+
     // Create new answer for a question
     createAnswer: async (
         questionId: string,
@@ -88,16 +100,14 @@ export const commentsApi = {
         answerId: string,
         commentContent: string
     ): Promise<{ message: string; comment: Comment }> => {
-        const response = await fetch(
-            `${API_BASE_URL}/answers/${answerId}/comments/`,
-            {
-                method: "POST",
-                headers: getAuthHeaders(),
-                body: JSON.stringify({
-                    comment_content: commentContent,
-                }),
-            }
-        );
+        const response = await fetch(`${API_BASE_URL}/comment/add/`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                answer_id: answerId,
+                comment_content: commentContent,
+            }),
+        });
 
         return handleResponse<{ message: string; comment: Comment }>(response);
     },
@@ -108,7 +118,7 @@ export const commentsApi = {
         commentContent: string
     ): Promise<{ message: string; comment: Comment }> => {
         const response = await fetch(
-            `${API_BASE_URL}/comments/${commentId}/update/`,
+            `${API_BASE_URL}/comment/edit/${commentId}/`,
             {
                 method: "PUT",
                 headers: getAuthHeaders(),
@@ -124,7 +134,7 @@ export const commentsApi = {
     // Delete comment (only by author or admin)
     deleteComment: async (commentId: string): Promise<{ message: string }> => {
         const response = await fetch(
-            `${API_BASE_URL}/comments/${commentId}/delete/`,
+            `${API_BASE_URL}/comment/delete/${commentId}/`,
             {
                 method: "DELETE",
                 headers: getAuthHeaders(),
