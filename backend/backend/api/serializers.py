@@ -260,3 +260,32 @@ class CommentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ["comment_content"]
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """Serializer for displaying notifications"""
+
+    user = UserProfileSerializer(read_only=True)
+    question = QuestionListSerializer(read_only=True)
+    answer = AnswerSerializer(read_only=True)
+    mention_by = UserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "user",
+            "question",
+            "answer",
+            "mention_by",
+            "is_read",
+            "timestamp",
+        ]
+
+
+class NotificationUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating notification read status"""
+
+    class Meta:
+        model = Notification
+        fields = ["is_read"]

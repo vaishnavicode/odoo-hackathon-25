@@ -39,7 +39,9 @@ export const useAdminAuth = () => {
     const profileQuery = useQuery<User>({
         queryKey: queryKeys.auth.user,
         queryFn: adminApi.getProfile,
-        enabled: !!localStorage.getItem("accessToken") && localStorage.getItem("userType") === "admin",
+        enabled:
+            !!localStorage.getItem("accessToken") &&
+            localStorage.getItem("userType") === "admin",
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
@@ -75,11 +77,7 @@ export const useAdminAuth = () => {
     });
 
     // Delete user by admin mutation
-    const deleteUserMutation = useMutation<
-        { message: string },
-        Error,
-        number
-    >({
+    const deleteUserMutation = useMutation<{ message: string }, Error, number>({
         mutationFn: adminApi.deleteUser,
         onSuccess: () => {
             toast.success("User deleted successfully");

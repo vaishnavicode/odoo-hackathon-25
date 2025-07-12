@@ -661,8 +661,8 @@ const Index = () => {
                         <div className="text-sm text-gray-600">
                             © 2025 StackIt. All rights reserved.
                         </div>
-                        <Link 
-                            to="/admin" 
+                        <Link
+                            to="/admin"
                             className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
                         >
                             Admin Portal

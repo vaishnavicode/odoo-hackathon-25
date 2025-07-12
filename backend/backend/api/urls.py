@@ -61,4 +61,28 @@ urlpatterns = [
     path(
         "comments/<int:comment_id>/delete/", views.delete_comment, name="delete-comment"
     ),
+    # Notification endpoints
+    path("notifications/", views.get_notifications, name="get-notifications"),
+    path(
+        "notifications/unread-count/",
+        views.get_unread_notifications_count,
+        name="get-unread-notifications-count",
+    ),
+    path(
+        "notifications/<int:notification_id>/read/",
+        views.mark_notification_read,
+        name="mark-notification-read",
+    ),
+    path(
+        "notifications/mark-all-read/",
+        views.mark_all_notifications_read,
+        name="mark-all-notifications-read",
+    ),
+    path(
+        "notifications/<int:notification_id>/delete/",
+        views.delete_notification,
+        name="delete-notification",
+    ),
+    # Users endpoint for mentions
+    path("users/", views.get_users_list, name="get-users-list"),
 ]

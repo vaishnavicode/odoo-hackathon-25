@@ -59,7 +59,9 @@ export const AdminDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Total Users
+                        </CardTitle>
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -72,7 +74,9 @@ export const AdminDashboard: React.FC = () => {
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Platform Stats</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Platform Stats
+                        </CardTitle>
                         <BarChart3 className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -85,7 +89,9 @@ export const AdminDashboard: React.FC = () => {
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Content</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                            Content
+                        </CardTitle>
                         <MessageSquare className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -115,7 +121,9 @@ export const AdminDashboard: React.FC = () => {
                                     className="flex items-center justify-between p-4 border rounded-lg"
                                 >
                                     <div className="flex-1">
-                                        <div className="font-medium">{user.username}</div>
+                                        <div className="font-medium">
+                                            {user.username}
+                                        </div>
                                         <div className="text-sm text-muted-foreground">
                                             {user.user_email}
                                         </div>
@@ -127,7 +135,11 @@ export const AdminDashboard: React.FC = () => {
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => setSelectedUserId(user.id)}
+                                                    onClick={() =>
+                                                        setSelectedUserId(
+                                                            user.id
+                                                        )
+                                                    }
                                                     disabled={isDeletingUser}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
@@ -139,16 +151,30 @@ export const AdminDashboard: React.FC = () => {
                                                         Delete User
                                                     </AlertDialogTitle>
                                                     <AlertDialogDescription>
-                                                        Are you sure you want to delete the user "{user.username}"? 
-                                                        This action cannot be undone and will remove all their data.
+                                                        Are you sure you want to
+                                                        delete the user "
+                                                        {user.username}"? This
+                                                        action cannot be undone
+                                                        and will remove all
+                                                        their data.
                                                     </AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
-                                                    <AlertDialogCancel onClick={() => setSelectedUserId(null)}>
+                                                    <AlertDialogCancel
+                                                        onClick={() =>
+                                                            setSelectedUserId(
+                                                                null
+                                                            )
+                                                        }
+                                                    >
                                                         Cancel
                                                     </AlertDialogCancel>
                                                     <AlertDialogAction
-                                                        onClick={() => handleDeleteUser(user.id)}
+                                                        onClick={() =>
+                                                            handleDeleteUser(
+                                                                user.id
+                                                            )
+                                                        }
                                                         className="bg-red-600 hover:bg-red-700"
                                                     >
                                                         Delete User

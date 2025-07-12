@@ -29,13 +29,13 @@ const App = () => (
                     <Route path="/ask" element={<AskQuestionNew />} />
                     <Route path="/profile" element={<UserProfile />} />
                     <Route path="/admin" element={<AdminAuth />} />
-                    <Route 
-                        path="/admin/dashboard" 
+                    <Route
+                        path="/admin/dashboard"
                         element={
                             <AdminProtectedRoute>
                                 <AdminDashboard />
                             </AdminProtectedRoute>
-                        } 
+                        }
                     />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />

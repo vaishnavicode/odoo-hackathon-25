@@ -552,6 +552,9 @@ def post_answer(request, question_id):
     if serializer.is_valid():
         answer = serializer.save(user=request.user, question=question)
 
+        # Create notifications for new answer
+        create_answer_notification(answer)
+
         return Response(
             {
                 "message": "Answer posted successfully",
@@ -630,6 +633,9 @@ def post_comment(request, answer_id):
     if serializer.is_valid():
         comment = serializer.save(user=request.user, answer=answer)
 
+        # Create notifications for new comment
+        create_comment_notification(comment)
+
         return Response(
             {
                 "message": "Comment posted successfully",
@@ -695,3 +701,90 @@ def delete_comment(request, comment_id):
     return Response(
         {"message": "Comment deleted successfully"}, status=status.HTTP_200_OK
     )
+
+
+# Notification management views
+@api_view(["GET"])
+@permission_classes([IsUserAuthenticated])
+def get_notifications(request):
+    """Get all notifications for the authenticated user"""
+    notifications = Notification.objects.filter(user=request.user).order_by(
+        "-timestamp"
+    )
+
+    # Add pagination
+    paginator = PageNumberPagination()
+    paginator.page_size = 20
+    paginated_notifications = paginator.paginate_queryset(notifications, request)
+
+    serializer = NotificationSerializer(paginated_notifications, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsUserAuthenticated])
+def get_unread_notifications_count(request):
+    """Get count of unread notifications for the authenticated user"""
+    count = Notification.objects.filter(user=request.user, is_read=False).count()
+
+    return Response({"unread_count": count}, status=status.HTTP_200_OK)
+
+
+@api_view(["PUT"])
+@permission_classes([IsUserAuthenticated])
+def mark_notification_read(request, notification_id):
+    """Mark a specific notification as read"""
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+    except Notification.DoesNotExist:
+        return Response(
+            {"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    notification.is_read = True
+    notification.save()
+
+    return Response(
+        {"message": "Notification marked as read"}, status=status.HTTP_200_OK
+    )
+
+
+@api_view(["PUT"])
+@permission_classes([IsUserAuthenticated])
+def mark_all_notifications_read(request):
+    """Mark all notifications as read for the authenticated user"""
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+
+    return Response(
+        {"message": "All notifications marked as read"}, status=status.HTTP_200_OK
+    )
+
+
+@api_view(["DELETE"])
+@permission_classes([IsUserAuthenticated])
+def delete_notification(request, notification_id):
+    """Delete a specific notification"""
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+    except Notification.DoesNotExist:
+        return Response(
+            {"error": "Notification not found"}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    notification.delete()
+
+    return Response(
+        {"message": "Notification deleted successfully"}, status=status.HTTP_200_OK
+    )
+
+
+# User list endpoint for mentions
+@api_view(["GET"])
+@permission_classes([IsUserAuthenticated])
+def get_users_list(request):
+    """Get list of users for mention suggestions"""
+    users = UserDetail.objects.filter(is_user_deleted=False).values("id", "username")[
+        :50
+    ]  # Limit to 50 users
+
+    return Response(list(users), status=status.HTTP_200_OK)

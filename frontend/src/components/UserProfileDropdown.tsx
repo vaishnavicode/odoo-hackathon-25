@@ -35,7 +35,8 @@ export const UserProfileDropdown = () => {
     };
 
     // Check if user is admin
-    const isAdmin = localStorage.getItem("userType") === "admin" || user.isAdmin;
+    const isAdmin =
+        localStorage.getItem("userType") === "admin" || user.isAdmin;
 
     return (
         <DropdownMenu>
@@ -109,7 +110,7 @@ export const UserProfileDropdown = () => {
                         <span>My Answers</span>
                     </Link>
                 </DropdownMenuItem>
-                
+
                 {isAdmin && (
                     <>
                         <DropdownMenuSeparator />
@@ -124,7 +125,7 @@ export const UserProfileDropdown = () => {
                         </DropdownMenuItem>
                     </>
                 )}
-                
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     onClick={handleLogout}

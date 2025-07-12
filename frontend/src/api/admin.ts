@@ -88,7 +88,8 @@ export const adminApi = {
             }),
         });
 
-        const data = await handleResponse<BackendAdminRegisterResponse>(response);
+        const data =
+            await handleResponse<BackendAdminRegisterResponse>(response);
 
         // After registration, login to get tokens
         return await adminApi.login({

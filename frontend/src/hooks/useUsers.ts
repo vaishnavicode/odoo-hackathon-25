@@ -58,16 +58,20 @@ const fetchAllUsers = async (): Promise<UsersListResponse["results"]> => {
     // Extract unique users from questions (since there's no dedicated users endpoint)
     const data = await response.json();
     const users: Record<string, UsersListResponse["results"][0]> = {};
-    
-    data.results?.forEach((question: { user?: { id: number; username: string; user_email?: string } }) => {
-        if (question.user) {
-            users[question.user.id] = {
-                id: question.user.id,
-                username: question.user.username,
-                user_email: question.user.user_email || "",
-            };
+
+    data.results?.forEach(
+        (question: {
+            user?: { id: number; username: string; user_email?: string };
+        }) => {
+            if (question.user) {
+                users[question.user.id] = {
+                    id: question.user.id,
+                    username: question.user.username,
+                    user_email: question.user.user_email || "",
+                };
+            }
         }
-    });
+    );
 
     return Object.values(users);
 };
