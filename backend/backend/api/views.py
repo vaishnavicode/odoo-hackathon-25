@@ -10,6 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import *
 from .serializers import *
 from .permissions import * 
+from .utils import *
 
 
 @api_view(['POST'])
@@ -305,3 +306,31 @@ class QuestionListView(generics.ListAPIView):
     search_fields = ['question_title', 'question_description']
     permission_classes = [AllowAny]
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def question_detail(request, question_id):
+    """Detailed view of a question with answers, comments, upvotes, and users"""
+    try:
+        question = Question.objects.get(id=question_id, question_deleted=False)
+        serializer = QuestionDetailSerializer(question)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Question.DoesNotExist:
+        return Response({'error': 'Question not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([IsUserAuthenticated])
+def post_question(request):
+    """Post a new question (User only)"""
+    serializer = QuestionCreateSerializer(data=request.data)
+    if serializer.is_valid():
+        question = serializer.save(user=request.user)
+        
+        create_mention_notifications(question)
+        
+        return Response({
+            'message': 'Question posted successfully',
+            'question_id': question.id,  
+            'question': serializer.data
+        }, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
