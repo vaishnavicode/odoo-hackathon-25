@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'api',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders'
 
 ]
@@ -134,7 +135,7 @@ REST_FRAMEWORK = {
         'api.authentication.CustomJWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'api.permissions.IsAuthenticatedCustom',
     ],
 }
 
@@ -162,6 +163,9 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
 
     'JTI_CLAIM': 'jti',
+    
+    # Blacklist settings
+    'BLACKLIST_TOKEN_CHECKS': ['access', 'refresh'],
 }
 
 # CORS settings
