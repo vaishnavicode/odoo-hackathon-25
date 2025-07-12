@@ -134,7 +134,7 @@ class QuestionListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['id', 'question_title', 'question_description', 'question_tag', 'user', 'upvotes', 'answer_count']
+        fields = ['id', 'question_title', 'question_description', 'question_tag', 'user', 'upvotes', 'answer_count', 'timestamp']
 
     def get_upvotes(self, obj):
         return Upvote.objects.filter(question=obj).count()
@@ -145,14 +145,14 @@ class QuestionListSerializer(serializers.ModelSerializer):
 class UserMiniSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDetail
-        fields = ['id', 'username', 'user_email']
+        fields = ['id', 'username', 'user_email', 'reputation']
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserMiniSerializer(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ['id', 'user', 'comment_content']
+        fields = ['id', 'user', 'comment_content', 'timestamp']
 
 class AnswerUpvoteSerializer(serializers.ModelSerializer):
     by_user = UserMiniSerializer(read_only=True)
@@ -168,7 +168,7 @@ class AnswerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Answer
-        fields = ['id', 'user', 'answer_description', 'comments', 'upvotes']
+        fields = ['id', 'user', 'answer_description', 'comments', 'upvotes', 'timestamp']
 
     def get_comments(self, obj):
         comments = Comment.objects.filter(answer=obj, comment_deleted=False)
