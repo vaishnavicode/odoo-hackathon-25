@@ -23,6 +23,8 @@ urlpatterns = [
     # Question enpoints
 
     path('questions/', views.QuestionListView.as_view(), name='question-list'),
+    # path('questions/ask/', views.QuestionListView.as_view(), name='question-list'),
+    # path('questions/id/', views.QuestionListView.as_view(), name='question-list'),
 
 
 ]
