@@ -653,6 +653,23 @@ const Index = () => {
                 onClose={() => setAuthDialogOpen(false)}
                 defaultMode={authDialogMode}
             />
+
+            {/* Footer with Admin Access */}
+            <footer className="bg-gray-100 border-t mt-12">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="flex justify-between items-center">
+                        <div className="text-sm text-gray-600">
+                            © 2025 StackIt. All rights reserved.
+                        </div>
+                        <Link 
+                            to="/admin" 
+                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                            Admin Portal
+                        </Link>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 };

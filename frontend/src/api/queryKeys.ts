@@ -5,6 +5,10 @@ export const queryKeys = {
         user: ["auth", "user"] as const,
         profile: (userId: string) => ["auth", "profile", userId] as const,
     },
+    admin: {
+        profile: ["admin", "profile"] as const,
+        users: ["admin", "users"] as const,
+    },
     questions: {
         all: ["questions"] as const,
         list: (filters?: Record<string, string | number | undefined>) =>
@@ -21,5 +25,10 @@ export const queryKeys = {
         all: ["notifications"] as const,
         list: (page?: number) => ["notifications", "list", page] as const,
         unreadCount: ["notifications", "unreadCount"] as const,
+    },
+    users: {
+        all: ["users"] as const,
+        list: ["users", "list"] as const,
+        mentions: ["users", "mentions"] as const,
     },
 } as const;

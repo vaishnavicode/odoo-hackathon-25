@@ -15,6 +15,7 @@ import {
     LogOut,
     HelpCircle,
     MessageSquare,
+    Shield,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
@@ -32,6 +33,9 @@ export const UserProfileDropdown = () => {
     const getInitials = (username: string) => {
         return username.slice(0, 2).toUpperCase();
     };
+
+    // Check if user is admin
+    const isAdmin = localStorage.getItem("userType") === "admin" || user.isAdmin;
 
     return (
         <DropdownMenu>
@@ -105,6 +109,22 @@ export const UserProfileDropdown = () => {
                         <span>My Answers</span>
                     </Link>
                 </DropdownMenuItem>
+                
+                {isAdmin && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link
+                                to="/admin/dashboard"
+                                className="flex items-center cursor-pointer text-blue-600"
+                            >
+                                <Shield className="mr-2 h-4 w-4" />
+                                <span>Admin Panel</span>
+                            </Link>
+                        </DropdownMenuItem>
+                    </>
+                )}
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     onClick={handleLogout}
