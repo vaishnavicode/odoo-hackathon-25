@@ -22,165 +22,119 @@ import {
     User,
     Menu,
     Filter,
+    Loader2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-
-// Mock data for initial display
-const mockQuestions = [
-    {
-        id: 1,
-        title: "How to use React hooks with TypeScript?",
-        description:
-            "I'm having trouble understanding how to properly type React hooks in TypeScript...",
-        author: "john_doe",
-        authorReputation: 1250,
-        tags: ["React", "TypeScript", "Hooks"],
-        votes: 15,
-        answers: 3,
-        views: 142,
-        timeAgo: "2 hours ago",
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        isAccepted: true,
-    },
-    {
-        id: 2,
-        title: "Best practices for JWT authentication",
-        description:
-            "What are the security considerations when implementing JWT authentication?",
-        author: "sarah_dev",
-        authorReputation: 890,
-        tags: ["JWT", "Authentication", "Security"],
-        votes: 8,
-        answers: 2,
-        views: 89,
-        timeAgo: "4 hours ago",
-        createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-        isAccepted: false,
-    },
-    {
-        id: 3,
-        title: "Tailwind CSS vs styled-components performance",
-        description:
-            "Which styling approach offers better performance for large React applications?",
-        author: "alex_smith",
-        authorReputation: 2350,
-        tags: ["CSS", "Tailwind", "Performance"],
-        votes: 23,
-        answers: 7,
-        views: 256,
-        timeAgo: "1 day ago",
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-        isAccepted: true,
-    },
-    {
-        id: 4,
-        title: "How to optimize React performance for large datasets?",
-        description:
-            "My React app is becoming slow when rendering large lists. What are the best optimization techniques?",
-        author: "mike_react",
-        authorReputation: 3200,
-        tags: ["React", "Performance", "Optimization"],
-        votes: 35,
-        answers: 12,
-        views: 678,
-        timeAgo: "3 days ago",
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-        isAccepted: true,
-    },
-    {
-        id: 5,
-        title: "Understanding Node.js event loop",
-        description:
-            "Can someone explain how the Node.js event loop works with practical examples?",
-        author: "node_ninja",
-        authorReputation: 1890,
-        tags: ["Node.js", "JavaScript", "Event Loop"],
-        votes: 42,
-        answers: 8,
-        views: 834,
-        timeAgo: "1 week ago",
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
-        isAccepted: false,
-    },
-    {
-        id: 6,
-        title: "Python async/await best practices",
-        description:
-            "What are the common pitfalls when using async/await in Python and how to avoid them?",
-        author: "python_pro",
-        authorReputation: 4500,
-        tags: ["Python", "Async", "Best Practices"],
-        votes: 18,
-        answers: 5,
-        views: 245,
-        timeAgo: "2 days ago",
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-        isAccepted: true,
-    },
-];
+import { useAuth } from "@/hooks/useAuth";
+import { useQuestions } from "@/hooks/useQuestions";
+import { useDebounce } from "@/hooks/useDebounce";
+import { AuthDialog } from "@/components/AuthDialog";
+import { UserProfileDropdown } from "@/components/UserProfileDropdown";
+import { stripMarkdown, truncateText } from "@/lib/markdownUtils";
 
 const Index = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const { isAuthenticated, user } = useAuth();
     const [searchQuery, setSearchQuery] = useState("");
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [sortBy, setSortBy] = useState("newest");
     const [filterBy, setFilterBy] = useState("all");
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
+    const [authDialogOpen, setAuthDialogOpen] = useState(false);
+    const [authDialogMode, setAuthDialogMode] = useState<"login" | "signup">(
+        "login"
+    );
 
-    // Filter and sort questions based on current state
-    const filteredAndSortedQuestions = useMemo(() => {
-        let filtered = [...mockQuestions];
+    // Debounce search query to avoid excessive filtering
+    const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+    // Fetch all questions from API (no filtering on backend)
+    const { data: questionsResponse, isLoading, error } = useQuestions({});
+
+    // Transform backend data to frontend format and apply all filtering/sorting client-side
+    const displayQuestions = useMemo(() => {
+        if (!questionsResponse?.results) return [];
+
+        let questions = questionsResponse.results.map((q) => ({
+            id: q.id,
+            title: q.question_title,
+            description: q.question_description,
+            author: q.user, // This is the username from backend
+            authorReputation: Math.floor(Math.random() * 5000), // Random reputation for demo
+            tags: [q.question_tag], // Backend stores single tag, frontend expects array
+            votes: q.upvotes,
+            answers: q.answer_count,
+            views: Math.floor(Math.random() * 1000), // Random views for demo
+            timeAgo: "recently", // Default since backend doesn't provide this formatted
+            createdAt: new Date(), // Default since backend doesn't provide created_at in list
+            isAccepted: q.answer_count > 0 && Math.random() > 0.7, // Random accepted status for demo
+        }));
 
         // Apply search filter
-        if (searchQuery) {
-            filtered = filtered.filter(
+        if (debouncedSearchQuery.trim()) {
+            const query = debouncedSearchQuery.toLowerCase();
+            questions = questions.filter(
                 (q) =>
-                    q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    q.description
+                    q.title.toLowerCase().includes(query) ||
+                    stripMarkdown(q.description)
                         .toLowerCase()
-                        .includes(searchQuery.toLowerCase()) ||
-                    q.tags.some((tag) =>
-                        tag.toLowerCase().includes(searchQuery.toLowerCase())
-                    )
+                        .includes(query) ||
+                    q.tags.some((tag) => tag.toLowerCase().includes(query)) ||
+                    q.author.toLowerCase().includes(query)
             );
         }
 
         // Apply tag filter
         if (selectedTag) {
-            filtered = filtered.filter((q) => q.tags.includes(selectedTag));
+            questions = questions.filter((q) =>
+                q.tags.some(
+                    (tag) => tag.toLowerCase() === selectedTag.toLowerCase()
+                )
+            );
         }
 
         // Apply status filter
         if (filterBy === "answered") {
-            filtered = filtered.filter((q) => q.answers > 0);
+            questions = questions.filter((q) => q.answers > 0);
         } else if (filterBy === "unanswered") {
-            filtered = filtered.filter((q) => q.answers === 0);
+            questions = questions.filter((q) => q.answers === 0);
         } else if (filterBy === "accepted") {
-            filtered = filtered.filter((q) => q.isAccepted);
+            questions = questions.filter((q) => q.isAccepted);
         }
 
         // Apply sorting
-        filtered.sort((a, b) => {
-            switch (sortBy) {
-                case "newest":
-                    return b.createdAt.getTime() - a.createdAt.getTime();
-                case "oldest":
-                    return a.createdAt.getTime() - b.createdAt.getTime();
-                case "votes":
-                    return b.votes - a.votes;
-                case "views":
-                    return b.views - a.views;
-                case "answers":
-                    return b.answers - a.answers;
-                case "reputation":
-                    return b.authorReputation - a.authorReputation;
-                default:
-                    return 0;
-            }
-        });
+        switch (sortBy) {
+            case "newest":
+                questions.sort((a, b) => b.id - a.id);
+                break;
+            case "oldest":
+                questions.sort((a, b) => a.id - b.id);
+                break;
+            case "votes":
+                questions.sort((a, b) => b.votes - a.votes);
+                break;
+            case "views":
+                questions.sort((a, b) => b.views - a.views);
+                break;
+            case "answers":
+                questions.sort((a, b) => b.answers - a.answers);
+                break;
+            case "reputation":
+                questions.sort(
+                    (a, b) => b.authorReputation - a.authorReputation
+                );
+                break;
+            default:
+                questions.sort((a, b) => b.id - a.id);
+        }
 
-        return filtered;
-    }, [searchQuery, sortBy, filterBy, selectedTag]);
+        return questions;
+    }, [
+        questionsResponse,
+        debouncedSearchQuery,
+        selectedTag,
+        filterBy,
+        sortBy,
+    ]);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -215,7 +169,7 @@ const Index = () => {
 
                         {/* Desktop User Actions */}
                         <div className="hidden md:flex items-center space-x-4">
-                            {isLoggedIn ? (
+                            {isAuthenticated ? (
                                 <>
                                     <Button variant="outline" size="sm" asChild>
                                         <Link to="/ask">
@@ -229,24 +183,25 @@ const Index = () => {
                                             3
                                         </span>
                                     </div>
-                                    <div className="flex items-center space-x-2 cursor-pointer">
-                                        <div className="bg-blue-100 rounded-full p-2">
-                                            <User className="h-4 w-4 text-blue-600" />
-                                        </div>
-                                        <span className="text-sm font-medium">
-                                            john_doe
-                                        </span>
-                                    </div>
+                                    <UserProfileDropdown />
                                 </>
                             ) : (
                                 <div className="flex items-center space-x-2">
                                     <Button
                                         variant="ghost"
-                                        onClick={() => setIsLoggedIn(true)}
+                                        onClick={() => {
+                                            setAuthDialogMode("login");
+                                            setAuthDialogOpen(true);
+                                        }}
                                     >
                                         Log In
                                     </Button>
-                                    <Button onClick={() => setIsLoggedIn(true)}>
+                                    <Button
+                                        onClick={() => {
+                                            setAuthDialogMode("signup");
+                                            setAuthDialogOpen(true);
+                                        }}
+                                    >
                                         Sign Up
                                     </Button>
                                 </div>
@@ -337,7 +292,7 @@ const Index = () => {
                             <h1 className="text-2xl font-bold text-gray-900">
                                 All Questions
                             </h1>
-                            {isLoggedIn && (
+                            {isAuthenticated && (
                                 <Button asChild>
                                     <Link to="/ask">
                                         <Plus className="h-4 w-4 mr-2" />
@@ -454,28 +409,78 @@ const Index = () => {
                             </div>
 
                             {/* Results Info */}
-                            <div className="mt-4 text-sm text-gray-600">
-                                Showing {filteredAndSortedQuestions.length}{" "}
-                                question
-                                {filteredAndSortedQuestions.length !== 1
-                                    ? "s"
-                                    : ""}
-                                {selectedTag && (
-                                    <span className="ml-2">
-                                        filtered by tag:
-                                        <Badge
-                                            variant="secondary"
-                                            className="ml-1"
-                                        >
-                                            {selectedTag}
-                                        </Badge>
-                                    </span>
+                            <div className="mt-4 text-sm text-gray-600 flex items-center justify-between">
+                                <div>
+                                    Showing {displayQuestions.length} question
+                                    {displayQuestions.length !== 1 ? "s" : ""}
+                                    {questionsResponse?.results && (
+                                        <span className="text-gray-500">
+                                            {" "}
+                                            of{" "}
+                                            {
+                                                questionsResponse.results.length
+                                            }{" "}
+                                            total
+                                        </span>
+                                    )}
+                                    {selectedTag && (
+                                        <span className="ml-2">
+                                            filtered by tag:
+                                            <Badge
+                                                variant="secondary"
+                                                className="ml-1"
+                                            >
+                                                {selectedTag}
+                                            </Badge>
+                                        </span>
+                                    )}
+                                    {debouncedSearchQuery && (
+                                        <span className="ml-2">
+                                            matching "{debouncedSearchQuery}"
+                                        </span>
+                                    )}
+                                </div>
+                                {(debouncedSearchQuery ||
+                                    selectedTag ||
+                                    filterBy !== "all") && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setSearchQuery("");
+                                            setSelectedTag(null);
+                                            setFilterBy("all");
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Clear all filters
+                                    </Button>
                                 )}
                             </div>
                         </div>
 
                         <div className="space-y-4">
-                            {filteredAndSortedQuestions.length === 0 ? (
+                            {isLoading ? (
+                                <div className="flex justify-center py-12">
+                                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                </div>
+                            ) : error ? (
+                                <Card className="text-center py-12">
+                                    <CardContent>
+                                        <div className="text-red-600 mb-4">
+                                            Error loading questions:{" "}
+                                            {error.message}
+                                        </div>
+                                        <Button
+                                            onClick={() =>
+                                                window.location.reload()
+                                            }
+                                        >
+                                            Try Again
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            ) : displayQuestions.length === 0 ? (
                                 <Card className="text-center py-12">
                                     <CardContent>
                                         <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -483,12 +488,12 @@ const Index = () => {
                                             No questions found
                                         </h3>
                                         <p className="text-gray-600 mb-4">
-                                            {searchQuery
-                                                ? `No questions match "${searchQuery}"`
+                                            {debouncedSearchQuery
+                                                ? `No questions match "${debouncedSearchQuery}"`
                                                 : "No questions match your current filters"}
                                         </p>
                                         <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                                            {(searchQuery ||
+                                            {(debouncedSearchQuery ||
                                                 selectedTag ||
                                                 filterBy !== "all") && (
                                                 <Button
@@ -502,7 +507,7 @@ const Index = () => {
                                                     Clear filters
                                                 </Button>
                                             )}
-                                            {isLoggedIn && (
+                                            {isAuthenticated && (
                                                 <Button asChild>
                                                     <Link to="/ask">
                                                         <Plus className="h-4 w-4 mr-2" />
@@ -514,7 +519,7 @@ const Index = () => {
                                     </CardContent>
                                 </Card>
                             ) : (
-                                filteredAndSortedQuestions.map((question) => (
+                                displayQuestions.map((question) => (
                                     <Card
                                         key={question.id}
                                         className="hover:shadow-md transition-shadow cursor-pointer"
@@ -531,7 +536,11 @@ const Index = () => {
                                                 </Link>
                                             </div>
                                             <p className="text-gray-600 mt-2 line-clamp-2">
-                                                {question.description}
+                                                {truncateText(
+                                                    stripMarkdown(
+                                                        question.description
+                                                    )
+                                                )}
                                             </p>
                                         </CardHeader>
                                         <CardContent className="pt-0">
@@ -606,6 +615,13 @@ const Index = () => {
                     </div>
                 </div>
             </main>
+
+            {/* Authentication Dialog */}
+            <AuthDialog
+                isOpen={authDialogOpen}
+                onClose={() => setAuthDialogOpen(false)}
+                defaultMode={authDialogMode}
+            />
         </div>
     );
 };

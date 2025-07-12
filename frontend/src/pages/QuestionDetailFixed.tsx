@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { RichEditor } from "@/components/ui/RichEditor";
+import { Textarea } from "@/components/ui/textarea";
 import {
     ArrowUp,
     ArrowDown,
@@ -70,9 +70,7 @@ const QuestionDetail = () => {
     };
 
     const submitAnswer = () => {
-        // Check if there's actual text content (after trimming)
         if (!newAnswer.trim()) return;
-
         if (!isAuthenticated) {
             alert("Please log in to answer");
             return;
@@ -329,13 +327,14 @@ const QuestionDetail = () => {
                                         </h3>
                                     </CardHeader>
                                     <CardContent>
-                                        <RichEditor
+                                        <Textarea
                                             value={newAnswer}
-                                            onChange={(value) =>
-                                                setNewAnswer(value)
+                                            onChange={(e) =>
+                                                setNewAnswer(e.target.value)
                                             }
                                             placeholder="Write your answer here..."
-                                            className="mb-4 min-h-[200px]"
+                                            rows={8}
+                                            className="mb-4"
                                         />
                                         <Button
                                             onClick={submitAnswer}
