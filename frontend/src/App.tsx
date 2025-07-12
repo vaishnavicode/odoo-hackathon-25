@@ -8,6 +8,9 @@ import QuestionDetailNew from "./pages/QuestionDetailNew";
 import AskQuestionNew from "./pages/AskQuestionNew";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
+import { AdminAuth } from "./components/AdminAuth";
+import { AdminDashboard } from "./components/AdminDashboard";
+import { AdminProtectedRoute } from "./components/AdminProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +28,15 @@ const App = () => (
                     />
                     <Route path="/ask" element={<AskQuestionNew />} />
                     <Route path="/profile" element={<UserProfile />} />
+                    <Route path="/admin" element={<AdminAuth />} />
+                    <Route
+                        path="/admin/dashboard"
+                        element={
+                            <AdminProtectedRoute>
+                                <AdminDashboard />
+                            </AdminProtectedRoute>
+                        }
+                    />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                 </Routes>

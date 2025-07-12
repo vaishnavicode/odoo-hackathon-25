@@ -247,19 +247,49 @@ class QuestionDetailSerializer(serializers.ModelSerializer):
 class QuestionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = ['question_title', 'question_description', 'question_tag']
+        fields = ["question_title", "question_description", "question_tag"]
 
 
 class AnswerCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
-        fields = ['answer_description']
+        fields = ["answer_description"]
 
     def create(self, validated_data):
         # user will be passed from the view
         return Answer.objects.create(**validated_data)
 
+
 class AnswerUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
-        fields = ['answer_description']
+        fields = ["answer_description"]
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """Serializer for displaying notifications"""
+
+    user = UserProfileSerializer(read_only=True)
+    question = QuestionListSerializer(read_only=True)
+    answer = AnswerSerializer(read_only=True)
+    mention_by = UserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "user",
+            "question",
+            "answer",
+            "mention_by",
+            "is_read",
+            "timestamp",
+        ]
+
+
+class NotificationUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating notification read status"""
+
+    class Meta:
+        model = Notification
+        fields = ["is_read"]

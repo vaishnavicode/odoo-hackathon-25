@@ -8,6 +8,7 @@ export interface User {
     avatarUrl?: string;
     createdAt: string;
     updatedAt: string;
+    isAdmin?: boolean;
 }
 
 export interface LoginRequest {
@@ -47,6 +48,12 @@ export interface BackendUserProfile {
     user_email: string;
 }
 
+export interface BackendAdminProfile {
+    id: number;
+    username: string;
+    admin_email: string;
+}
+
 export interface BackendLoginResponse {
     message: string;
     user: BackendUserProfile;
@@ -56,7 +63,21 @@ export interface BackendLoginResponse {
     };
 }
 
+export interface BackendAdminLoginResponse {
+    message: string;
+    admin: BackendAdminProfile;
+    tokens: {
+        access: string;
+        refresh: string;
+    };
+}
+
 export interface BackendRegisterResponse {
     message: string;
     user: BackendUserProfile;
+}
+
+export interface BackendAdminRegisterResponse {
+    message: string;
+    admin: BackendAdminProfile;
 }
