@@ -285,7 +285,7 @@ def update_question(request, question_id):
         return Response({'error': 'Question not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsUserAuthenticated, IsAdminAuthenticated])
 def delete_question(request, question_id):
     """
     Delete a question (only author or admin).
@@ -293,20 +293,6 @@ def delete_question(request, question_id):
     """
     try:
         question = Question.objects.get(id=question_id, question_deleted=False)
-        user_type = request.auth.get('user_type')  # From JWT payload
-        user_id = request.user.id
-
-        if user_type == 'user':
-            if question.user.id != user_id:
-                return Response({'error': 'You are not allowed to delete this question'}, status=status.HTTP_403_FORBIDDEN)
-
-        elif user_type == 'admin':
-            if not Admin.objects.filter(id=user_id, is_admin_deleted=False).exists():
-                return Response({'error': 'Admin not found or inactive'}, status=status.HTTP_403_FORBIDDEN)
-
-        else:
-            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
-
         question.question_deleted = True
         question.save()
 
