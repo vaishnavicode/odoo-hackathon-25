@@ -256,3 +256,61 @@ def post_question(request):
         }, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+@permission_classes([IsUserAuthenticated])
+def update_question(request, question_id):
+    """Update a question (Only by the author)"""
+    try:
+        question = Question.objects.get(id=question_id, question_deleted=False)
+        
+        if question.user != request.user:
+            return Response({'error': 'You are not allowed to edit this question'}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = QuestionCreateSerializer(question, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            updated_question = serializer.save()
+            
+            create_mention_notifications(updated_question)
+            
+            return Response({
+                'message': 'Question updated successfully',
+                'question': serializer.data
+            }, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Question.DoesNotExist:
+        return Response({'error': 'Question not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_question(request, question_id):
+    """
+    Delete a question (only author or admin).
+    Soft-delete by setting question_deleted = True.
+    """
+    try:
+        question = Question.objects.get(id=question_id, question_deleted=False)
+        user_type = request.auth.get('user_type')  # From JWT payload
+        user_id = request.user.id
+
+        if user_type == 'user':
+            if question.user.id != user_id:
+                return Response({'error': 'You are not allowed to delete this question'}, status=status.HTTP_403_FORBIDDEN)
+
+        elif user_type == 'admin':
+            if not Admin.objects.filter(id=user_id, is_admin_deleted=False).exists():
+                return Response({'error': 'Admin not found or inactive'}, status=status.HTTP_403_FORBIDDEN)
+
+        else:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+        question.question_deleted = True
+        question.save()
+
+        return Response({'message': 'Question deleted successfully'}, status=status.HTTP_200_OK)
+
+    except Question.DoesNotExist:
+        return Response({'error': 'Question not found'}, status=status.HTTP_404_NOT_FOUND)

@@ -25,5 +25,8 @@ urlpatterns = [
     path('questions/', views.QuestionListView.as_view(), name='question-list'),
     path('questions/<int:question_id>/', views.question_detail, name='question-detail'),
     path('questions/ask/', views.post_question, name='post-question'),
+    path('questions/<int:question_id>/update/', views.update_question, name='update-question'),
+    path('questions/<int:question_id>/delete/', views.delete_question, name='delete-question'),
+
 
 ]
