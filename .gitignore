@@ -1,0 +1,60 @@
+# ========================
+# 🐍 Python / Django (backend/)
+# ========================
+# Bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Django
+*.sqlite3
+*.log
+*.pot
+*.mo
+*.pyc
+*.pyo
+*.pyd
+
+# Static/media files
+backend/staticfiles/
+backend/media/
+backend/static/
+
+# Migrations (ignore all except __init__.py)
+backend/**/migrations/*.py
+!backend/**/migrations/__init__.py
+backend/**/migrations/*.pyc
+
+# Django secrets
+backend/.env
+.env
+
+# ========================
+# ⚛️ React (frontend/)
+# ========================
+# Node modules
+frontend/node_modules/
+
+# Build output
+frontend/build/
+frontend/dist/
+
+# Local env files
+frontend/.env
+
+# Misc
+frontend/.eslintcache
+frontend/.DS_Store
+frontend/package-lock.json
+frontend/yarn.lock
+
+# ========================
+# 🧪 Testing / Coverage
+# ========================
+.
