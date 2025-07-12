@@ -23,4 +23,14 @@ class CustomJWTAuthentication(JWTAuthentication):
         except (UserDetail.DoesNotExist, Admin.DoesNotExist):
             raise InvalidToken('User not found')
         except Exception as e:
-            raise InvalidToken('Token is invalid or expired') 
+            raise InvalidToken('Token is invalid or expired')
+    
+    def authenticate(self, request):
+        """
+        Override to handle custom user types properly.
+        """
+        try:
+            return super().authenticate(request)
+        except Exception as e:
+            # If authentication fails, return None (anonymous user)
+            return None 

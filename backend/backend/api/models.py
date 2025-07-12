@@ -9,6 +9,21 @@ class UserDetail(models.Model):
 
     def __str__(self):
         return self.username
+    
+    # Authentication properties
+    @property
+    def is_authenticated(self):
+        return True
+    
+    @property
+    def is_anonymous(self):
+        return False
+    
+    def get_username(self):
+        return self.username
+    
+    def get_email(self):
+        return self.user_email
 
 # ----------------- Admin -----------------
 class Admin(models.Model):
@@ -19,6 +34,21 @@ class Admin(models.Model):
 
     def __str__(self):
         return self.username
+    
+    # Authentication properties
+    @property
+    def is_authenticated(self):
+        return True
+    
+    @property
+    def is_anonymous(self):
+        return False
+    
+    def get_username(self):
+        return self.username
+    
+    def get_email(self):
+        return self.admin_email
 
 # ----------------- Question -----------------
 class Question(models.Model):

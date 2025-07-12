@@ -19,4 +19,10 @@ urlpatterns = [
     path('auth/admin/profile/', views.admin_profile, name='admin_profile'),
     path('auth/user/profile/update/', views.update_user_profile, name='update_user_profile'),
     path('auth/admin/profile/update/', views.update_admin_profile, name='update_admin_profile'),
+
+    # Question enpoints
+
+    path('questions/', views.QuestionListView.as_view(), name='question-list'),
+
+
 ]
