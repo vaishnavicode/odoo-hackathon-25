@@ -70,9 +70,7 @@ const QuestionDetail = () => {
     };
 
     const submitAnswer = () => {
-        // Check if there's actual text content (after trimming)
         if (!newAnswer.trim()) return;
-
         if (!isAuthenticated) {
             alert("Please log in to answer");
             return;

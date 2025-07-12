@@ -23,3 +23,4 @@ def create_mention_notifications(question):
             )
         except UserDetail.DoesNotExist:
             continue
+
