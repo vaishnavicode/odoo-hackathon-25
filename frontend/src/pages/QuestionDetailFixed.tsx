@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { RichEditor } from "@/components/ui/RichEditor";
 import {
     ArrowUp,
     ArrowDown,
@@ -327,14 +327,13 @@ const QuestionDetail = () => {
                                         </h3>
                                     </CardHeader>
                                     <CardContent>
-                                        <Textarea
+                                        <RichEditor
                                             value={newAnswer}
-                                            onChange={(e) =>
-                                                setNewAnswer(e.target.value)
+                                            onChange={(value) =>
+                                                setNewAnswer(value)
                                             }
                                             placeholder="Write your answer here..."
-                                            rows={8}
-                                            className="mb-4"
+                                            className="mb-4 min-h-[200px]"
                                         />
                                         <Button
                                             onClick={submitAnswer}

@@ -17,4 +17,9 @@ export const queryKeys = {
             ["answers", "byQuestion", questionId] as const,
         byUser: (userId: string) => ["answers", "byUser", userId] as const,
     },
+    notifications: {
+        all: ["notifications"] as const,
+        list: (page?: number) => ["notifications", "list", page] as const,
+        unreadCount: ["notifications", "unreadCount"] as const,
+    },
 } as const;

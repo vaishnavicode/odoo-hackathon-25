@@ -27,13 +27,16 @@ import {
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuestions } from "@/hooks/useQuestions";
+import { useToggleQuestionUpvote } from "@/hooks/useInteractions";
 import { useDebounce } from "@/hooks/useDebounce";
 import { AuthDialog } from "@/components/AuthDialog";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
+import NotificationBell from "@/components/NotificationBell";
 import { stripMarkdown, truncateText } from "@/lib/markdownUtils";
 
 const Index = () => {
     const { isAuthenticated, user } = useAuth();
+    const toggleQuestionUpvoteMutation = useToggleQuestionUpvote();
     const [searchQuery, setSearchQuery] = useState("");
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [sortBy, setSortBy] = useState("newest");
@@ -136,6 +139,28 @@ const Index = () => {
         sortBy,
     ]);
 
+    const handleUpvoteQuestion = async (
+        questionId: number,
+        e: React.MouseEvent
+    ) => {
+        e.preventDefault(); // Prevent navigation to question detail
+        e.stopPropagation();
+
+        if (!isAuthenticated) {
+            setAuthDialogMode("login");
+            setAuthDialogOpen(true);
+            return;
+        }
+
+        try {
+            await toggleQuestionUpvoteMutation.mutateAsync(
+                questionId.toString()
+            );
+        } catch (error) {
+            // Error is handled by the mutation hook
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Navigation Header */}
@@ -177,12 +202,7 @@ const Index = () => {
                                             Ask Question
                                         </Link>
                                     </Button>
-                                    <div className="relative">
-                                        <Bell className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-900" />
-                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                            3
-                                        </span>
-                                    </div>
+                                    <NotificationBell />
                                     <UserProfileDropdown />
                                 </>
                             ) : (
@@ -566,12 +586,23 @@ const Index = () => {
                                             </div>
                                             <div className="flex items-center justify-between text-sm text-gray-500">
                                                 <div className="flex items-center space-x-4">
-                                                    <div className="flex items-center space-x-1">
+                                                    <button
+                                                        onClick={(e) =>
+                                                            handleUpvoteQuestion(
+                                                                question.id,
+                                                                e
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            toggleQuestionUpvoteMutation.isPending
+                                                        }
+                                                        className="flex items-center space-x-1 hover:text-blue-600 transition-colors disabled:opacity-50"
+                                                    >
                                                         <ArrowUp className="h-4 w-4" />
                                                         <span className="font-medium">
                                                             {question.votes}
                                                         </span>
-                                                    </div>
+                                                    </button>
                                                     <div className="flex items-center space-x-1">
                                                         <MessageSquare className="h-4 w-4" />
                                                         <span>
