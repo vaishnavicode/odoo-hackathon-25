@@ -35,4 +35,9 @@ urlpatterns = [
     # Upvote endpoints
     path('upvote/', views.toggle_upvote, name='toggle-upvote'),
 
+    # Comment endpoints
+    path('comment/add/', views.add_comment, name='add_comment'),
+    path('comment/edit/<int:comment_id>/', views.edit_comment, name='edit_comment'),
+    path('comment/delete/<int:comment_id>/', views.delete_comment, name='delete_comment'),
+
 ]

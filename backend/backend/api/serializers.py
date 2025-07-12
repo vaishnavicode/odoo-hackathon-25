@@ -168,7 +168,7 @@ class AnswerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Answer
-        fields = ['id', 'user', 'answer_description', 'comments', 'upvotes', 'timestamp']
+        fields = ['id', 'user', 'answer_description', 'comments', 'upvotes']
 
     def get_comments(self, obj):
         comments = Comment.objects.filter(answer=obj, comment_deleted=False)

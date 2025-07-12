@@ -434,3 +434,78 @@ def toggle_upvote(request):
 
     else:
         return Response({'error': 'Either question_id or answer_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsUserAuthenticated])
+def add_comment(request):
+    """
+    Add a comment to an answer (User only).
+    Required fields: answer_id, comment_content
+    """
+    answer_id = request.data.get('answer_id')
+    comment_content = request.data.get('comment_content')
+
+    if not answer_id or not comment_content:
+        return Response({'error': 'answer_id and comment_content are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        answer = Answer.objects.get(id=answer_id, answer_deleted=False)
+    except Answer.DoesNotExist:
+        return Response({'error': 'Answer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    comment = Comment.objects.create(
+        answer=answer,
+        user=request.user,
+        comment_content=comment_content
+    )
+
+    return Response({
+        'message': 'Comment added successfully',
+        'comment': CommentSerializer(comment).data
+    }, status=status.HTTP_201_CREATED)
+
+@api_view(['PUT'])
+@permission_classes([IsUserAuthenticated])
+def edit_comment(request, comment_id):
+    """
+    Edit a comment (only by the author).
+    Required field: comment_content
+    """
+    try:
+        comment = Comment.objects.get(id=comment_id, comment_deleted=False)
+    except Comment.DoesNotExist:
+        return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if comment.user != request.user:
+        return Response({'error': 'You are not allowed to edit this comment'}, status=status.HTTP_403_FORBIDDEN)
+
+    new_content = request.data.get('comment_content')
+    if not new_content:
+        return Response({'error': 'comment_content is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    comment.comment_content = new_content
+    comment.save()
+
+    return Response({
+        'message': 'Comment updated successfully',
+        'comment': CommentSerializer(comment).data
+    }, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsUserAuthenticated, IsAdminAuthenticated])
+def delete_comment(request, comment_id):
+    """
+    Soft-delete a comment (only by the author).
+    """
+    try:
+        comment = Comment.objects.get(id=comment_id, comment_deleted=False)
+    except Comment.DoesNotExist:
+        return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if comment.user != request.user:
+        return Response({'error': 'You are not allowed to delete this comment'}, status=status.HTTP_403_FORBIDDEN)
+
+    comment.comment_deleted = True
+    comment.save()
+
+    return Response({'message': 'Comment deleted successfully'}, status=status.HTTP_200_OK)
