@@ -255,11 +255,15 @@ class AnswerCreateSerializer(serializers.ModelSerializer):
         model = Answer
         fields = ["answer_description"]
 
+    def create(self, validated_data):
+        # user will be passed from the view
+        return Answer.objects.create(**validated_data)
 
-class CommentCreateSerializer(serializers.ModelSerializer):
+
+class AnswerUpdateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Comment
-        fields = ["comment_content"]
+        model = Answer
+        fields = ["answer_description"]
 
 
 class NotificationSerializer(serializers.ModelSerializer):
