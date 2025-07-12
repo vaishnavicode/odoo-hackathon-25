@@ -122,14 +122,20 @@ def logout(request):
     """Logout endpoint - blacklist the refresh token"""
     try:
         refresh_token = request.data.get('refresh_token')
-        if refresh_token:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
-        else:
+        if not refresh_token:
             return Response({'error': 'Refresh token required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate and blacklist the token
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+        
+        return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+        
     except Exception as e:
-        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'error': 'Invalid or expired refresh token',
+            'details': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsUserAuthenticated])
