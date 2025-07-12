@@ -20,19 +20,9 @@ def user_register(request):
     if serializer.is_valid():
         user = serializer.save()
         
-        # Generate JWT tokens
-        refresh = RefreshToken()
-        refresh['user_id'] = user.id
-        refresh['user_type'] = 'user'
-        refresh['email'] = user.user_email
-        
         return Response({
             'message': 'User registered successfully',
-            'user': UserProfileSerializer(user).data,
-            'tokens': {
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
-            }
+            'user': UserProfileSerializer(user).data
         }, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -45,19 +35,9 @@ def admin_register(request):
     if serializer.is_valid():
         admin = serializer.save()
         
-        # Generate JWT tokens
-        refresh = RefreshToken()
-        refresh['user_id'] = admin.id
-        refresh['user_type'] = 'admin'
-        refresh['email'] = admin.admin_email
-        
         return Response({
             'message': 'Admin registered successfully',
-            'admin': AdminProfileSerializer(admin).data,
-            'tokens': {
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
-            }
+            'admin': AdminProfileSerializer(admin).data
         }, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -139,7 +119,12 @@ def user_profile(request):
     """Get user profile"""
     try:
         user_id = request.user.id
-        user = UserDetail.objects.get(id=user_id, is_user_deleted=False)
+        user = UserDetail.objects.get(id=user_id)
+        
+        # Check if account is deleted
+        if user.is_user_deleted:
+            return Response({'error': 'Account has been deleted'}, status=status.HTTP_404_NOT_FOUND)
+        
         serializer = UserProfileSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except UserDetail.DoesNotExist:
@@ -151,7 +136,12 @@ def admin_profile(request):
     """Get admin profile"""
     try:
         admin_id = request.user.id
-        admin = Admin.objects.get(id=admin_id, is_admin_deleted=False)
+        admin = Admin.objects.get(id=admin_id)
+        
+        # Check if account is deleted
+        if admin.is_admin_deleted:
+            return Response({'error': 'Account has been deleted'}, status=status.HTTP_404_NOT_FOUND)
+        
         serializer = AdminProfileSerializer(admin)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Admin.DoesNotExist:
@@ -163,7 +153,12 @@ def update_user_profile(request):
     """Update user profile"""
     try:
         user_id = request.user.id
-        user = UserDetail.objects.get(id=user_id, is_user_deleted=False)
+        user = UserDetail.objects.get(id=user_id)
+        
+        # Check if account is deleted
+        if user.is_user_deleted:
+            return Response({'error': 'Cannot update deleted account'}, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer = UserProfileSerializer(user, data=request.data, partial=True)
         
         if serializer.is_valid():
@@ -183,7 +178,12 @@ def update_admin_profile(request):
     """Update admin profile"""
     try:
         admin_id = request.user.id
-        admin = Admin.objects.get(id=admin_id, is_admin_deleted=False)
+        admin = Admin.objects.get(id=admin_id)
+        
+        # Check if account is deleted
+        if admin.is_admin_deleted:
+            return Response({'error': 'Cannot update deleted account'}, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer = AdminProfileSerializer(admin, data=request.data, partial=True)
         
         if serializer.is_valid():
@@ -196,6 +196,84 @@ def update_admin_profile(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Admin.DoesNotExist:
         return Response({'error': 'Admin not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['DELETE'])
+@permission_classes([IsUserAuthenticated])
+def delete_user(request):
+    """Delete user account (soft delete)"""
+    try:
+        user_id = request.user.id
+        user = UserDetail.objects.get(id=user_id)
+        
+        # Check if account is already deleted
+        if user.is_user_deleted:
+            return Response({'error': 'Account already deleted'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Soft delete the user
+        user.is_user_deleted = True
+        user.save()
+        
+        return Response({
+            'message': 'User account deleted successfully'
+        }, status=status.HTTP_200_OK)
+        
+    except UserDetail.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminAuthenticated])
+def delete_admin(request):
+    """Delete admin account (soft delete)"""
+    try:
+        admin_id = request.user.id
+        admin = Admin.objects.get(id=admin_id)
+        
+        # Check if account is already deleted
+        if admin.is_admin_deleted:
+            return Response({'error': 'Account already deleted'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Soft delete the admin
+        admin.is_admin_deleted = True
+        admin.save()
+        
+        return Response({
+            'message': 'Admin account deleted successfully'
+        }, status=status.HTTP_200_OK)
+        
+    except Admin.DoesNotExist:
+        return Response({'error': 'Admin not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminAuthenticated])
+def delete_user_by_admin(request, user_id):
+    """Admin can delete any user account"""
+    try:
+        # Check if the current user is an admin
+        admin = Admin.objects.get(id=request.user.id)
+        
+        # Check if admin account is deleted
+        if admin.is_admin_deleted:
+            return Response({'error': 'Admin account has been deleted'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Find the user to delete
+        user = UserDetail.objects.get(id=user_id)
+        
+        # Check if user account is already deleted
+        if user.is_user_deleted:
+            return Response({'error': 'User account already deleted'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Soft delete the user
+        user.is_user_deleted = True
+        user.save()
+        
+        return Response({
+            'message': f'User {user.username} deleted successfully by admin'
+        }, status=status.HTTP_200_OK)
+        
+    except Admin.DoesNotExist:
+        return Response({'error': 'Admin not found'}, status=status.HTTP_404_NOT_FOUND)
+    except UserDetail.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])

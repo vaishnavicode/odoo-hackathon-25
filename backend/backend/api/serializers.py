@@ -69,14 +69,20 @@ class UserLoginSerializer(serializers.Serializer):
             # Check if user exists
             try:
                 user = UserDetail.objects.get(user_email=email)
+                
+                # Check if account is deleted
+                if user.is_user_deleted:
+                    raise serializers.ValidationError('Account has been deleted')
+                
+                # Check password
                 from django.contrib.auth.hashers import check_password
-                if check_password(password, user.user_password) and not user.is_user_deleted:
+                if check_password(password, user.user_password):
                     attrs['user'] = user
                     return attrs
                 else:
-                    raise serializers.ValidationError('Invalid credentials')
+                    raise serializers.ValidationError('Invalid password')
             except UserDetail.DoesNotExist:
-                raise serializers.ValidationError('Invalid credentials')
+                raise serializers.ValidationError('User not registered')
         else:
             raise serializers.ValidationError('Must include email and password')
 
@@ -92,14 +98,20 @@ class AdminLoginSerializer(serializers.Serializer):
             # Check if admin exists
             try:
                 admin = Admin.objects.get(admin_email=email)
+                
+                # Check if account is deleted
+                if admin.is_admin_deleted:
+                    raise serializers.ValidationError('Account has been deleted')
+                
+                # Check password
                 from django.contrib.auth.hashers import check_password
-                if check_password(password, admin.admin_password) and not admin.is_admin_deleted:
+                if check_password(password, admin.admin_password):
                     attrs['admin'] = admin
                     return attrs
                 else:
-                    raise serializers.ValidationError('Invalid credentials')
+                    raise serializers.ValidationError('Invalid password')
             except Admin.DoesNotExist:
-                raise serializers.ValidationError('Invalid credentials')
+                raise serializers.ValidationError('Admin not registered')
         else:
             raise serializers.ValidationError('Must include email and password')
 
