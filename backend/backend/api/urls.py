@@ -19,9 +19,13 @@ urlpatterns = [
     path('auth/admin/profile/', views.admin_profile, name='admin_profile'),
     path('auth/user/profile/update/', views.update_user_profile, name='update_user_profile'),
     path('auth/admin/profile/update/', views.update_admin_profile, name='update_admin_profile'),
+    
+    # Delete endpoints
+    path('auth/user/delete/', views.delete_user, name='delete_user'),
+    path('auth/admin/delete/', views.delete_admin, name='delete_admin'),
+    path('auth/admin/delete-user/<int:user_id>/', views.delete_user_by_admin, name='delete_user_by_admin'),
 
-    # Question enpoints
-
+    # Question endpoints
     path('questions/', views.QuestionListView.as_view(), name='question-list'),
     path('questions/<int:question_id>/', views.question_detail, name='question-detail'),
     path('questions/ask/', views.post_question, name='post-question'),
