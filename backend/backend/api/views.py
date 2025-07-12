@@ -201,7 +201,7 @@ def update_admin_profile(request):
 @api_view(['DELETE'])
 @permission_classes([IsUserAuthenticated])
 def delete_user(request):
-    """Delete user account (soft delete)"""
+    """Delete user account (soft delete), soft-delete all their questions and answers, and delete all their notifications."""
     try:
         user_id = request.user.id
         user = UserDetail.objects.get(id=user_id)
@@ -214,8 +214,17 @@ def delete_user(request):
         user.is_user_deleted = True
         user.save()
         
+        # Soft delete all questions by this user
+        Question.objects.filter(user=user, question_deleted=False).update(question_deleted=True)
+        # Soft delete all answers by this user
+        Answer.objects.filter(user=user, answer_deleted=False).update(answer_deleted=True)
+        
+        # Delete all notifications for this user (as recipient or mention)
+        Notification.objects.filter(user=user).delete()
+        Notification.objects.filter(mention_by=user).delete()
+        
         return Response({
-            'message': 'User account deleted successfully'
+            'message': 'User account, all their questions, and answers deleted successfully'
         }, status=status.HTTP_200_OK)
         
     except UserDetail.DoesNotExist:
@@ -247,7 +256,7 @@ def delete_admin(request):
 @api_view(['DELETE'])
 @permission_classes([IsAdminAuthenticated])
 def delete_user_by_admin(request, user_id):
-    """Admin can delete any user account"""
+    """Admin can delete any user account, soft-delete all their questions and answers, and delete all their notifications."""
     try:
         # Check if the current user is an admin
         admin = Admin.objects.get(id=request.user.id)
@@ -267,8 +276,17 @@ def delete_user_by_admin(request, user_id):
         user.is_user_deleted = True
         user.save()
         
+        # Soft delete all questions by this user
+        Question.objects.filter(user=user, question_deleted=False).update(question_deleted=True)
+        # Soft delete all answers by this user
+        Answer.objects.filter(user=user, answer_deleted=False).update(answer_deleted=True)
+        
+        # Delete all notifications for this user (as recipient or mention)
+        Notification.objects.filter(user=user).delete()
+        Notification.objects.filter(mention_by=user).delete()
+        
         return Response({
-            'message': f'User {user.username} deleted successfully by admin'
+            'message': f'User {user.username}, all their questions, and answers deleted successfully by admin'
         }, status=status.HTTP_200_OK)
         
     except Admin.DoesNotExist:
@@ -277,14 +295,37 @@ def delete_user_by_admin(request, user_id):
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
-def test_endpoint(request):
-    """Test endpoint to verify API is working"""
-    return Response({
-        'message': 'API is working!',
-        'status': 'success'
-    }, status=status.HTTP_200_OK)
+@permission_classes([IsAdminAuthenticated])
+def admin_view_user_profile(request, user_id):
+    """Admin can view any user's profile"""
+    try:
+        user = UserDetail.objects.get(id=user_id)
+        if user.is_user_deleted:
+            return Response({'error': 'User account has been deleted'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserProfileSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except UserDetail.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['PUT'])
+@permission_classes([IsAdminAuthenticated])
+def admin_update_user_profile(request, user_id):
+    """Admin can update any user's profile"""
+    try:
+        user = UserDetail.objects.get(id=user_id)
+        if user.is_user_deleted:
+            return Response({'error': 'Cannot update deleted user account'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserProfileSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'User profile updated successfully by admin',
+                'user': serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except UserDetail.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    
 class QuestionListPagination(PageNumberPagination):
     page_size = 10 
     page_size_query_param = 'page_size'
@@ -509,3 +550,78 @@ def delete_comment(request, comment_id):
     comment.save()
 
     return Response({'message': 'Comment deleted successfully'}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def answer_detail(request, answer_id):
+    """View a single answer by its ID"""
+    try:
+        answer = Answer.objects.get(id=answer_id, answer_deleted=False)
+        serializer = AnswerSerializer(answer)
+        return Response(serializer.data, status=200)
+    except Answer.DoesNotExist:
+        return Response({'error': 'Answer not found'}, status=404)
+    
+@api_view(['POST'])
+@permission_classes([IsUserAuthenticated])
+def post_answer(request, question_id):
+    """Post a new answer to a question (User only)"""
+    try:
+        question = Question.objects.get(id=question_id, question_deleted=False)
+    except Question.DoesNotExist:
+        return Response({'error': 'Question not found'}, status=404)
+    serializer = AnswerCreateSerializer(data=request.data)
+    if serializer.is_valid():
+        answer = serializer.save(user=request.user, question=question)
+    if serializer.is_valid():
+        answer = serializer.save(user=request.user)
+        # Notification logic for mentions in answer_description
+        # create_mention_notifications(answer)
+        return Response({
+            'message': 'Answer posted successfully',
+            'answer': AnswerSerializer(answer).data
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+@permission_classes([IsUserAuthenticated])
+def update_answer(request, answer_id):
+    """Update an answer (only by the author or admin)"""
+    try:
+        answer = Answer.objects.get(id=answer_id)
+        if answer.answer_deleted:
+            return Response({'error': 'Answer already deleted'}, status=status.HTTP_400_BAD_REQUEST)
+        # Only the author or admin can update
+        if request.user != answer.user and not hasattr(request.user, 'is_admin_deleted'):
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        serializer = AnswerUpdateSerializer(answer, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            # Notification logic for mentions in answer_description
+            # create_mention_notifications(answer)
+            return Response({
+                'message': 'Answer updated successfully',
+                'answer': AnswerSerializer(answer).data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Answer.DoesNotExist:
+        return Response({'error': 'Answer not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['DELETE'])
+@permission_classes([IsUserAuthenticated, IsAdminAuthenticated])
+def delete_answer(request, answer_id):
+    """Delete an answer (soft delete, only by the author or admin)"""
+    try:
+        answer = Answer.objects.get(id=answer_id)
+        if answer.answer_deleted:
+            return Response({'error': 'Answer already deleted'}, status=status.HTTP_400_BAD_REQUEST)
+        # Only the author or admin can delete
+        if request.user != answer.user and not hasattr(request.user, 'is_admin_deleted'):
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        answer.answer_deleted = True
+        answer.save()
+        # Delete all notifications related to this answer
+        Notification.objects.filter(answer=answer).delete()
+        return Response({'message': 'Answer deleted successfully'}, status=status.HTTP_200_OK)
+    except Answer.DoesNotExist:
+        return Response({'error': 'Answer not found'}, status=status.HTTP_404_NOT_FOUND)

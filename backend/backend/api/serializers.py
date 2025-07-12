@@ -206,3 +206,17 @@ class QuestionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = ['question_title', 'question_description', 'question_tag']
+
+class AnswerCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = ['answer_description']
+
+    def create(self, validated_data):
+        # user will be passed from the view
+        return Answer.objects.create(**validated_data)
+
+class AnswerUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = ['answer_description']

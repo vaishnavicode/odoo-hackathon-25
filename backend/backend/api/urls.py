@@ -3,8 +3,6 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 
 urlpatterns = [
-    # Test endpoint
-    path('test/', views.test_endpoint, name='test_endpoint'),
     
     # Authentication endpoints
     path('auth/user/register/', views.user_register, name='user_register'),
@@ -19,6 +17,10 @@ urlpatterns = [
     path('auth/admin/profile/', views.admin_profile, name='admin_profile'),
     path('auth/user/profile/update/', views.update_user_profile, name='update_user_profile'),
     path('auth/admin/profile/update/', views.update_admin_profile, name='update_admin_profile'),
+
+    # Admin user management
+    path('auth/admin/user/<int:user_id>/', views.admin_view_user_profile, name='admin_view_user_profile'),
+    path('auth/admin/user/<int:user_id>/update/', views.admin_update_user_profile, name='admin_update_user_profile'),
     
     # Delete endpoints
     path('auth/user/delete/', views.delete_user, name='delete_user'),
@@ -35,9 +37,17 @@ urlpatterns = [
     # Upvote endpoints
     path('upvote/', views.toggle_upvote, name='toggle-upvote'),
 
+    # Answer endpoints
+    path('answers/<int:answer_id>/', views.answer_detail, name='answer_detail'),
+    path('questions/<int:question_id>/answers/', views.post_answer, name='post_answer'),
+    path('answers/<int:answer_id>/update/', views.update_answer, name='update_answer'),
+    path('answers/<int:answer_id>/delete/', views.delete_answer, name='delete_answer'),
+
     # Comment endpoints
     path('comment/add/', views.add_comment, name='add_comment'),
     path('comment/edit/<int:comment_id>/', views.edit_comment, name='edit_comment'),
     path('comment/delete/<int:comment_id>/', views.delete_comment, name='delete_comment'),
+
+
 
 ]
