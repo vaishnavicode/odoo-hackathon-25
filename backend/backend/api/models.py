@@ -6,6 +6,7 @@ class UserDetail(models.Model):
     user_email = models.EmailField(unique=True)
     user_password = models.CharField(max_length=255)
     is_user_deleted = models.BooleanField(default=False)
+    reputation = models.IntegerField(default=0)
 
     def __str__(self):
         return self.username
@@ -57,6 +58,7 @@ class Question(models.Model):
     question_description = models.TextField()
     question_tag = models.CharField(max_length=255)
     question_deleted = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.question_title
@@ -67,6 +69,7 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     answer_description = models.TextField()
     answer_deleted = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Answer by {self.user.username} on Q{self.question.id}"
@@ -77,6 +80,7 @@ class Upvote(models.Model):
     answer = models.ForeignKey(Answer, null=True, blank=True, on_delete=models.CASCADE)
     upvote_count = models.PositiveIntegerField(default=1)
     by_user = models.ForeignKey(UserDetail, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Upvote by {self.by_user.username}"
@@ -88,6 +92,7 @@ class Notification(models.Model):
     answer = models.ForeignKey(Answer, null=True, blank=True, on_delete=models.CASCADE)
     mention_by = models.ForeignKey(UserDetail, related_name='mentions', on_delete=models.CASCADE)
     is_read = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Notification for {self.user.username}"
@@ -98,6 +103,7 @@ class Comment(models.Model):
     user = models.ForeignKey(UserDetail, on_delete=models.CASCADE)
     comment_content = models.TextField()
     comment_deleted = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.username}: {self.comment_content[:30]}"
