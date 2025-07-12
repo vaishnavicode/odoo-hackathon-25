@@ -1,6 +1,6 @@
 # Django Authentication API
 
-This Django application provides a complete authentication system with JWT tokens for both users and admins.
+This Django application provides a complete authentication system with JWT tokens for both users and admins, including user management and question handling.
 
 ## Features
 
@@ -8,6 +8,9 @@ This Django application provides a complete authentication system with JWT token
 - User and Admin login/logout
 - JWT token-based authentication
 - Profile management
+- Account deletion (soft delete)
+- Admin can delete any user
+- Question listing with filtering and pagination
 - Password hashing and validation
 - CORS support for frontend integration
 
@@ -145,7 +148,7 @@ http://localhost:8000/api/
 ### 6. Logout
 **POST** `/auth/logout/`
 - **Description**: Logout and blacklist refresh token
-- **Authentication**: Required (Bearer token)
+- **Authentication**: Not required
 - **Request Body**:
 ```json
 {
@@ -248,6 +251,70 @@ http://localhost:8000/api/
 }
 ```
 
+### 12. Delete User Account
+**DELETE** `/auth/user/delete/`
+- **Description**: Delete current user's account (soft delete)
+- **Authentication**: Required (Bearer token - User)
+- **Response**:
+```json
+{
+    "message": "User account deleted successfully"
+}
+```
+
+### 13. Delete Admin Account
+**DELETE** `/auth/admin/delete/`
+- **Description**: Delete current admin's account (soft delete)
+- **Authentication**: Required (Bearer token - Admin)
+- **Response**:
+```json
+{
+    "message": "Admin account deleted successfully"
+}
+```
+
+### 14. Admin Delete User
+**DELETE** `/auth/admin/delete-user/{user_id}/`
+- **Description**: Admin can delete any user account
+- **Authentication**: Required (Bearer token - Admin)
+- **Response**:
+```json
+{
+    "message": "User john_doe deleted successfully by admin"
+}
+```
+
+### 15. List Questions
+**GET** `/questions/`
+- **Description**: Get list of questions with filtering and pagination
+- **Authentication**: Not required
+- **Query Parameters**:
+  - `page`: Page number (default: 1)
+  - `page_size`: Items per page (default: 10, max: 100)
+  - `user`: Filter by user ID
+  - `question_tag`: Filter by question tag
+  - `ordering`: Sort by field (e.g., `question_title`, `-question_title`)
+  - `search`: Search in title and description
+- **Response**:
+```json
+{
+    "count": 25,
+    "next": "http://localhost:8000/api/questions/?page=2",
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "question_title": "How to use Django?",
+            "question_description": "I'm new to Django...",
+            "question_tag": "django",
+            "user": "john_doe",
+            "upvotes": 5,
+            "answer_count": 3
+        }
+    ]
+}
+```
+
 ## Authentication
 
 ### JWT Token Usage
@@ -287,7 +354,7 @@ Authorization: Bearer <access_token>
 
 1. Install required packages:
 ```bash
-pip install djangorestframework djangorestframework-simplejwt django-cors-headers
+pip install djangorestframework djangorestframework-simplejwt django-cors-headers django-filter
 ```
 
 2. Run migrations:
@@ -302,12 +369,6 @@ python manage.py runserver
 ```
 
 ## Testing the API
-
-You can test the API using tools like:
-- Postman
-- cURL
-- Thunder Client (VS Code extension)
-- Any HTTP client
 
 ### Example cURL commands:
 
@@ -342,4 +403,29 @@ curl -X POST http://localhost:8000/api/auth/user/login/ \
 ```bash
 curl -X GET http://localhost:8000/api/auth/user/profile/ \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-``` 
+```
+
+**Delete user account:**
+```bash
+curl -X DELETE http://localhost:8000/api/auth/user/delete/ \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Admin delete user:**
+```bash
+curl -X DELETE http://localhost:8000/api/auth/admin/delete-user/1/ \
+  -H "Authorization: Bearer ADMIN_ACCESS_TOKEN"
+```
+
+**List questions with filtering:**
+```bash
+curl -X GET "http://localhost:8000/api/questions/?search=django&ordering=-question_title&page=1"
+```
+
+## Security Features
+
+- **Soft Delete**: Accounts are marked as deleted but not permanently removed
+- **Password Hashing**: All passwords are securely hashed
+- **JWT Blacklisting**: Refresh tokens are blacklisted on logout
+- **Permission-based Access**: Different endpoints require different authentication levels
+- **Input Validation**: All inputs are validated and sanitized 
