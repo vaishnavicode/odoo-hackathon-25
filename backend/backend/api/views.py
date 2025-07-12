@@ -530,6 +530,15 @@ def toggle_upvote(request):
     answer_id = request.data.get("answer_id")
     user = request.user
 
+    # Ensure vote is integer
+    try:
+        vote = int(vote)
+    except (ValueError, TypeError):
+        return Response(
+            {"error": "Invalid vote. Must be +1 or -1."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     if vote not in [1, -1]:
         return Response(
             {"error": "Invalid vote. Must be +1 or -1."},
@@ -552,12 +561,14 @@ def toggle_upvote(request):
                     {"message": "Already upvoted"}, status=status.HTTP_200_OK
                 )
             Upvote.objects.create(question=question, by_user=user)
+            update_reputation_for_upvote(question=question, vote=1)
             return Response(
                 {"message": "Upvoted successfully"}, status=status.HTTP_201_CREATED
             )
-        else:
+        else:  # vote == -1
             if existing:
                 existing.delete()
+                update_reputation_for_upvote(question=question, vote=-1)
                 return Response(
                     {"message": "Upvote removed"}, status=status.HTTP_200_OK
                 )
@@ -581,12 +592,14 @@ def toggle_upvote(request):
                     {"message": "Already upvoted"}, status=status.HTTP_200_OK
                 )
             Upvote.objects.create(answer=answer, by_user=user)
+            update_reputation_for_upvote(answer=answer, vote=1)
             return Response(
                 {"message": "Upvoted successfully"}, status=status.HTTP_201_CREATED
             )
-        else:
+        else:  # vote == -1
             if existing:
                 existing.delete()
+                update_reputation_for_upvote(answer=answer, vote=-1)
                 return Response(
                     {"message": "Upvote removed"}, status=status.HTTP_200_OK
                 )
