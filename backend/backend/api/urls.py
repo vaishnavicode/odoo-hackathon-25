@@ -32,5 +32,7 @@ urlpatterns = [
     path('questions/<int:question_id>/update/', views.update_question, name='update-question'),
     path('questions/<int:question_id>/delete/', views.delete_question, name='delete-question'),
 
+    # Upvote endpoints
+    path('upvote/', views.toggle_upvote, name='toggle-upvote'),
 
 ]

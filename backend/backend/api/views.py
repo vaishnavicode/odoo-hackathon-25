@@ -378,3 +378,59 @@ def delete_question(request, question_id):
 
     except Question.DoesNotExist:
         return Response({'error': 'Question not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([IsUserAuthenticated])
+def toggle_upvote(request):
+    """
+    POST API to upvote (+1) or remove upvote (-1) on a question or answer.
+    Required fields: vote (+1 or -1), and either question_id or answer_id.
+    """
+    vote = request.data.get('vote')
+    question_id = request.data.get('question_id')
+    answer_id = request.data.get('answer_id')
+    user = request.user
+
+    if vote not in [1, -1]:
+        return Response({'error': 'Invalid vote. Must be +1 or -1.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if question_id:
+        try:
+            question = Question.objects.get(id=question_id, question_deleted=False)
+        except Question.DoesNotExist:
+            return Response({'error': 'Question not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        existing = Upvote.objects.filter(question=question, by_user=user).first()
+
+        if vote == 1:
+            if existing:
+                return Response({'message': 'Already upvoted'}, status=status.HTTP_200_OK)
+            Upvote.objects.create(question=question, by_user=user)
+            return Response({'message': 'Upvoted successfully'}, status=status.HTTP_201_CREATED)
+        else:
+            if existing:
+                existing.delete()
+                return Response({'message': 'Upvote removed'}, status=status.HTTP_200_OK)
+            return Response({'message': 'No upvote to remove'}, status=status.HTTP_200_OK)
+
+    elif answer_id:
+        try:
+            answer = Answer.objects.get(id=answer_id, answer_deleted=False)
+        except Answer.DoesNotExist:
+            return Response({'error': 'Answer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        existing = Upvote.objects.filter(answer=answer, by_user=user).first()
+
+        if vote == 1:
+            if existing:
+                return Response({'message': 'Already upvoted'}, status=status.HTTP_200_OK)
+            Upvote.objects.create(answer=answer, by_user=user)
+            return Response({'message': 'Upvoted successfully'}, status=status.HTTP_201_CREATED)
+        else:
+            if existing:
+                existing.delete()
+                return Response({'message': 'Upvote removed'}, status=status.HTTP_200_OK)
+            return Response({'message': 'No upvote to remove'}, status=status.HTTP_200_OK)
+
+    else:
+        return Response({'error': 'Either question_id or answer_id is required'}, status=status.HTTP_400_BAD_REQUEST)
