@@ -9,6 +9,7 @@ from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import *
 from .serializers import *
+from .permissions import * 
 
 
 @api_view(['POST'])
