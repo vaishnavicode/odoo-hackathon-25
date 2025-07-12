@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from .models import UserDetail, Admin
+from .models import *
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
@@ -114,3 +114,19 @@ class AdminProfileSerializer(serializers.ModelSerializer):
         model = Admin
         fields = ['id', 'username', 'admin_email']
         read_only_fields = ['id'] 
+
+class QuestionListSerializer(serializers.ModelSerializer):
+    user = serializers.CharField(source='user.username', read_only=True)
+    upvotes = serializers.SerializerMethodField()
+    answer_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = ['id', 'question_title', 'question_description', 'question_tag', 'user', 'upvotes', 'answer_count']
+
+    def get_upvotes(self, obj):
+        return Upvote.objects.filter(question=obj).count()
+
+    def get_answer_count(self, obj):
+        return Answer.objects.filter(question=obj).count()
+

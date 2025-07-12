@@ -1,19 +1,16 @@
-from rest_framework import status, generics
+from rest_framework import status, generics, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password, check_password
-from .models import UserDetail, Admin
-from .serializers import (
-    UserRegistrationSerializer, 
-    AdminRegistrationSerializer,
-    UserLoginSerializer,
-    AdminLoginSerializer,
-    UserProfileSerializer,
-    AdminProfileSerializer
-)
+from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import *
+from .serializers import *
+
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -202,3 +199,25 @@ def test_endpoint(request):
         'message': 'API is working!',
         'status': 'success'
     }, status=status.HTTP_200_OK)
+
+class QuestionListPagination(PageNumberPagination):
+    page_size = 10 
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class QuestionListView(generics.ListAPIView):
+    queryset = Question.objects.filter(question_deleted=False).select_related('user')
+    serializer_class = QuestionListSerializer
+    pagination_class = QuestionListPagination
+
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+
+    filterset_fields = ['user', 'question_tag']
+
+    ordering_fields = ['question_title', 'question_tag']
+
+    ordering = ['id']
+
+    search_fields = ['question_title', 'question_description']
+    permission_classes = [AllowAny]
+
