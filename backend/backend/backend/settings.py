@@ -134,7 +134,7 @@ REST_FRAMEWORK = {
         'api.authentication.CustomJWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'api.permissions.IsAuthenticatedCustom',
     ],
 }
 
