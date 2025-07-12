@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { RichEditor } from "@/components/ui/RichEditor";
 import { Label } from "@/components/ui/label";
+import MentionTextarea from "@/components/ui/MentionTextarea";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -46,6 +47,8 @@ import {
     useToggleAnswerUpvote,
 } from "@/hooks/useInteractions";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
+import NotificationBell from "@/components/NotificationBell";
+import { useUsers } from "@/hooks/useUsers";
 import { toast } from "sonner";
 import MarkdownPreview from "../components/ui/MarkdownPreview";
 
@@ -57,6 +60,9 @@ const QuestionDetailNew = () => {
         isLoading,
         error,
     } = useQuestionDetail(id || "");
+
+    // Get users for mention functionality
+    const { data: users = [] } = useUsers();
 
     // Mutations
     const createAnswerMutation = useCreateAnswer();
@@ -254,12 +260,7 @@ const QuestionDetailNew = () => {
                                             Ask Question
                                         </Link>
                                     </Button>
-                                    <div className="relative">
-                                        <Bell className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-900" />
-                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                            3
-                                        </span>
-                                    </div>
+                                    <NotificationBell />
                                     <UserProfileDropdown />
                                 </>
                             ) : (
@@ -584,17 +585,15 @@ const QuestionDetailNew = () => {
                                                     {/* Add Comment Form */}
                                                     {isAuthenticated && (
                                                         <div className="ml-8 pt-4 border-t border-gray-200">
-                                                            <div className="flex space-x-2">
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Add a comment..."
+                                                            <div className="flex space-x-2 w-full">
+                                                                <MentionTextarea
                                                                     value={
                                                                         newComments[
                                                                             answer.id.toString()
                                                                         ] || ""
                                                                     }
                                                                     onChange={(
-                                                                        e
+                                                                        value
                                                                     ) =>
                                                                         setNewComments(
                                                                             (
@@ -602,13 +601,15 @@ const QuestionDetailNew = () => {
                                                                             ) => ({
                                                                                 ...prev,
                                                                                 [answer.id.toString()]:
-                                                                                    e
-                                                                                        .target
-                                                                                        .value,
+                                                                                    value,
                                                                             })
                                                                         )
                                                                     }
-                                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                                    placeholder="Add a comment... (use @username to mention someone)"
+                                                                    users={
+                                                                        users
+                                                                    }
+                                                                    className="flex-1 min-h-[40px] resize-none w-[750px]"
                                                                 />
                                                                 <Button
                                                                     size="sm"
@@ -653,9 +654,13 @@ const QuestionDetailNew = () => {
                                         onChange={(value) =>
                                             setNewAnswer(value)
                                         }
-                                        placeholder="Share your knowledge and help others..."
+                                        placeholder="Share your knowledge and help others... (use @username to mention someone)"
                                         className="min-h-[250px] mt-1"
                                     />
+                                    <p className="text-sm text-gray-500 mt-2">
+                                        💡 Tip: Use @username to mention other
+                                        users and they'll get notified
+                                    </p>
                                 </div>
                                 <div className="flex justify-end">
                                     <Button

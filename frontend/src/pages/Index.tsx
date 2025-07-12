@@ -31,6 +31,7 @@ import { useToggleQuestionUpvote } from "@/hooks/useInteractions";
 import { useDebounce } from "@/hooks/useDebounce";
 import { AuthDialog } from "@/components/AuthDialog";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
+import NotificationBell from "@/components/NotificationBell";
 import { stripMarkdown, truncateText } from "@/lib/markdownUtils";
 
 const Index = () => {
@@ -201,12 +202,7 @@ const Index = () => {
                                             Ask Question
                                         </Link>
                                     </Button>
-                                    <div className="relative">
-                                        <Bell className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-900" />
-                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                            3
-                                        </span>
-                                    </div>
+                                    <NotificationBell />
                                     <UserProfileDropdown />
                                 </>
                             ) : (

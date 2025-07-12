@@ -28,6 +28,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUpdateProfile, useDeleteAccount } from "@/hooks/useInteractions";
+import NotificationBell from "@/components/NotificationBell";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
 import { toast } from "sonner";
@@ -106,12 +107,7 @@ const UserProfile = () => {
 
                         {/* Desktop User Actions */}
                         <div className="flex items-center space-x-4">
-                            <div className="relative">
-                                <Bell className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-900" />
-                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                    3
-                                </span>
-                            </div>
+                            <NotificationBell />
                             <UserProfileDropdown />
                         </div>
                     </div>
