@@ -10,6 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import *
 from .serializers import *
 from .permissions import * 
+from .utils import *
 
 
 @api_view(['POST'])
@@ -244,10 +245,14 @@ def post_question(request):
     """Post a new question (User only)"""
     serializer = QuestionCreateSerializer(data=request.data)
     if serializer.is_valid():
-        question = serializer.save(user=request.user)  
+        question = serializer.save(user=request.user)
+        
+        create_mention_notifications(question)
+        
         return Response({
             'message': 'Question posted successfully',
             'question_id': question.id,  
             'question': serializer.data
         }, status=status.HTTP_201_CREATED)
+    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
