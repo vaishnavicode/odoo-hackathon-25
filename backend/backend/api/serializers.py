@@ -130,3 +130,67 @@ class QuestionListSerializer(serializers.ModelSerializer):
     def get_answer_count(self, obj):
         return Answer.objects.filter(question=obj).count()
 
+class UserMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserDetail
+        fields = ['id', 'username', 'user_email']
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = UserMiniSerializer(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'user', 'comment_content']
+
+class AnswerUpvoteSerializer(serializers.ModelSerializer):
+    by_user = UserMiniSerializer(read_only=True)
+
+    class Meta:
+        model = Upvote
+        fields = ['id', 'upvote_count', 'by_user']
+
+class AnswerSerializer(serializers.ModelSerializer):
+    user = UserMiniSerializer(read_only=True)
+    comments = serializers.SerializerMethodField()
+    upvotes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Answer
+        fields = ['id', 'user', 'answer_description', 'comments', 'upvotes']
+
+    def get_comments(self, obj):
+        comments = Comment.objects.filter(answer=obj, comment_deleted=False)
+        return CommentSerializer(comments, many=True).data
+
+    def get_upvotes(self, obj):
+        upvotes = Upvote.objects.filter(answer=obj)
+        return AnswerUpvoteSerializer(upvotes, many=True).data
+
+class QuestionUpvoteSerializer(serializers.ModelSerializer):
+    by_user = UserMiniSerializer(read_only=True)
+
+    class Meta:
+        model = Upvote
+        fields = ['id', 'upvote_count', 'by_user']
+
+class QuestionDetailSerializer(serializers.ModelSerializer):
+    user = UserMiniSerializer(read_only=True)
+    answers = serializers.SerializerMethodField()
+    upvotes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = ['id', 'user', 'question_title', 'question_description', 'question_tag', 'answers', 'upvotes']
+
+    def get_answers(self, obj):
+        answers = Answer.objects.filter(question=obj, answer_deleted=False)
+        return AnswerSerializer(answers, many=True).data
+
+    def get_upvotes(self, obj):
+        upvotes = Upvote.objects.filter(question=obj)
+        return QuestionUpvoteSerializer(upvotes, many=True).data
+
+class QuestionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ['question_title', 'question_description', 'question_tag']
