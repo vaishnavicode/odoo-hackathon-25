@@ -104,3 +104,27 @@ def create_comment_notification(comment):
                 )
         except UserDetail.DoesNotExist:
             continue
+
+
+def update_reputation_for_upvote(question=None, answer=None, vote=1):
+    """
+    Updates the reputation of the user who owns the question or answer
+    by adding or subtracting points.
+
+    :param question: Question instance (optional)
+    :param answer: Answer instance (optional)
+    :param vote: +1 for upvote, -1 for removing upvote
+    """
+    if question:
+        user = question.user
+    elif answer:
+        user = answer.user
+    else:
+        raise ValueError("Either question or answer must be provided.")
+
+    # Ensure vote is either +1 or -1
+    if vote not in [1, -1]:
+        raise ValueError("Vote must be +1 or -1.")
+
+    user.reputation += vote
+    user.save()
